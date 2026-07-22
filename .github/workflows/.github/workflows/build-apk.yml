@@ -1,0 +1,59 @@
+name: Build Guardian Contacts APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare web application
+        shell: bash
+        run: |
+          mkdir -p www
+          find . -maxdepth 1 -type f -iname '*.zip' -exec unzip -o {} -d www \;
+          HTML_FILE=$(find www -type f -iname '*.html' | head -n 1)
+          test -n "$HTML_FILE"
+          if [ "$HTML_FILE" != "www/index.html" ]; then cp "$HTML_FILE" www/index.html; fi
+          test -f www/index.html
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Create Android project
+        run: |
+          npx cap init "حارس الجهات" "com.guardiancontacts.app" --web-dir www
+          npx cap add android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Guardian-Contacts-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
