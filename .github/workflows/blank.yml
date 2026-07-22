@@ -47,7 +47,24 @@ jobs:
           npx cap add android
 
       - name: Fix Kotlin dependency conflict
-        run: |
+  run: |
+    cd android
+    cat >> build.gradle << 'EOF'
+    
+    subprojects {
+      configurations.all {
+        resolutionStrategy {
+          force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+          force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+        }
+      }
+    }
+    EOF
+    cat >> gradle.properties << 'EOF'
+    org.gradle.jvmargs=-Xmx2048m
+    android.useAndroidX=true
+    kotlin.code.style=official
+    EOF
           cat >> android/gradle.properties << 'EOF'
           org.gradle.jvmargs=-Xmx2048m
           android.useAndroidX=true
