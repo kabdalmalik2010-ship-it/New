@@ -57,3 +57,10 @@ jobs:
           name: Guardian-Contacts-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          - name: Fix Kotlin dependency conflict
+  run: |
+    cat >> android/gradle.properties << 'EOF'
+    org.gradle.jvmargs=-Xmx2048m
+    android.useAndroidX=true
+    kotlin.code.style=official
+    EOF
